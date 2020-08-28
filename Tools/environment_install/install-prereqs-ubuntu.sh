@@ -190,7 +190,7 @@ fi
 
 # Install all packages
 $APT_GET install $BASE_PKGS $SITL_PKGS $PX4_PKGS $ARM_LINUX_PKGS $COVERAGE_PKGS
-$PIP install --user -U $PYTHON_PKGS
+sudo -H $PIP install --user -U $PYTHON_PKGS
 
 if [[ -z "${DO_AP_STM_ENV}" ]] && maybe_prompt_user "Install ArduPilot STM32 toolchain [N/y]?" ; then
     DO_AP_STM_ENV=1
