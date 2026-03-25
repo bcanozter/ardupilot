@@ -1,0 +1,52 @@
+
+services:
+  ardupilot:
+    image: ardupilot:Copter-4.6.3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/ardupilot
+    user: "1000:1000"
+    #command: tail -f /dev/null
+    command:
+      - /bin/bash
+      - -c
+      - |
+        /ardupilot/Tools/autotest/sim_vehicle.py -v ArduCopter --no-rebuild \
+        --enable-dds \
+        --no-mavproxy 
+    stdin_open: true
+    tty: true
+
+
+  mavproxy:
+    image: mavproxy:latest
+    command: >
+      mavproxy.py --non-interactive
+      --master tcp:ardupilot:5760
+      --out udpout:mavros2:14551
+      --sitl ardupilot:5501
+      --out tcpin:0.0.0.0:5760   
+    restart: always
+    ports:
+      - 5760:5760
+
+  mavros2:
+    image: mavros:latest
+    command: ros2 launch mavros apm.launch fcu_url:="udp://:14551@mavproxy:14555"
+    depends_on:
+      ardupilot:
+        condition: service_started
+      mavproxy:
+        condition: service_started
+    restart: always
+    deploy:
+      resources:
+        limits:
+          # cpus: '0.01'
+          memory: 200M
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 524288
